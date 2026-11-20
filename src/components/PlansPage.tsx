@@ -46,14 +46,23 @@ export const PlansPage: React.FC<PlansPageProps> = ({
 }) => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
-  const handleChoosePackage = (tier: SubscriptionTier, days: 14 | 30) => {
+  const handleChoosePackage = (tier: SubscriptionTier) => {
     onUpdatePlan({
       ...plan,
       tier,
-      packageDays: days,
     });
     setCheckoutOpen(true);
   };
+
+  const basePrice =
+    plan.packageDays === 14
+      ? TIER_PRICING.base.price14Days
+      : TIER_PRICING.base.price30Days;
+
+  const premiumPrice =
+    plan.packageDays === 14
+      ? TIER_PRICING.premium.price14Days
+      : TIER_PRICING.premium.price30Days;
 
   return (
     <section className="relative min-h-[calc(100vh-4rem)] overflow-hidden py-10 sm:py-14 flex flex-col justify-center">
@@ -97,8 +106,8 @@ export const PlansPage: React.FC<PlansPageProps> = ({
           </button>
         </div>
 
-        {/* Heading */}
-        <div className="text-center max-w-2xl mx-auto mb-10">
+        {/* Heading & 14 / 30 Day Toggle */}
+        <div className="text-center max-w-2xl mx-auto mb-9">
           <p className="text-xs font-semibold text-[#EC6426] mb-2">
             Plan Tiers
           </p>
@@ -108,16 +117,49 @@ export const PlansPage: React.FC<PlansPageProps> = ({
           >
             Choose your tier and package length
           </h1>
-          <p className="text-sm sm:text-base text-[#632713]/80 mt-3">
-            Both Base and Premium tiers come in 14-day and 30-day packages with full ingredient customisation.
+          <p className="text-sm sm:text-base text-[#632713]/80 mt-3 mb-6">
+            Toggle between 14-day and 30-day packages. Full ingredient customisation is included on both tiers.
           </p>
+
+          <div
+            className="inline-flex p-1.5 bg-white/90 backdrop-blur-md rounded-2xl border border-[#632713]/15 shadow-sm"
+            role="tablist"
+            aria-label="Toggle between 14-day and 30-day package"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={plan.packageDays === 14}
+              onClick={() => onUpdatePlan({ ...plan, packageDays: 14 })}
+              className={`px-6 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+                plan.packageDays === 14
+                  ? 'bg-[#632713] text-white shadow-sm'
+                  : 'text-[#632713] hover:text-[#EC6426]'
+              }`}
+            >
+              14 Days
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={plan.packageDays === 30}
+              onClick={() => onUpdatePlan({ ...plan, packageDays: 30 })}
+              className={`px-6 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+                plan.packageDays === 30
+                  ? 'bg-[#EC6426] text-white shadow-sm'
+                  : 'text-[#632713] hover:text-[#EC6426]'
+              }`}
+            >
+              30 Days
+            </button>
+          </div>
         </div>
 
         {/* ONLY Two Frosted Tier Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-7 max-w-5xl mx-auto items-stretch">
           {/* Card 1: Base Tier — Chicken Rice Background */}
           <div className="rounded-[30px] p-2.5 bg-white/75 backdrop-blur-md shadow-xl border border-white/85 flex flex-col">
-            {/* Background Food Canvas: Hainanese Chicken Rice (No price text over image) */}
+            {/* Background Food Canvas: Hainanese Chicken Rice (No price on image) */}
             <div className="relative rounded-[22px] overflow-hidden min-h-[280px] flex flex-col justify-start p-6 sm:p-7 text-white">
               <img
                 src="/src/assets/images/dish_chicken_rice_1795159607214.jpg"
@@ -145,7 +187,7 @@ export const PlansPage: React.FC<PlansPageProps> = ({
               </div>
             </div>
 
-            {/* Lower Checklist & 14-Day / 30-Day Price Buttons */}
+            {/* Lower Checklist & Single Package Price CTA Button */}
             <div className="flex-1 flex flex-col justify-between p-5 sm:p-6 bg-white/95 rounded-[22px] mt-2.5">
               <ul className="space-y-2.5 text-sm text-[#632713] mb-6">
                 {BASE_PERKS.map((perk) => (
@@ -156,28 +198,19 @@ export const PlansPage: React.FC<PlansPageProps> = ({
                 ))}
               </ul>
 
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleChoosePackage('base', 14)}
-                  className="py-3.5 px-3 rounded-xl text-sm font-bold text-[#632713] bg-[#FDE3CF] hover:bg-[#F8A91F]/60 transition-colors font-mono tabular-nums whitespace-nowrap cursor-pointer"
-                >
-                  14 Days · $138.60
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleChoosePackage('base', 30)}
-                  className="py-3.5 px-3 rounded-xl text-sm font-bold text-white bg-[#632713] hover:bg-[#4c1d0e] transition-colors font-mono tabular-nums whitespace-nowrap cursor-pointer"
-                >
-                  30 Days · $297.00
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => handleChoosePackage('base')}
+                className="w-full py-3.5 px-5 rounded-xl text-sm font-bold text-white bg-[#632713] hover:bg-[#4c1d0e] transition-colors font-mono tabular-nums cursor-pointer"
+              >
+                Subscribe ({plan.packageDays} Days) · ${basePrice.toFixed(2)}
+              </button>
             </div>
           </div>
 
           {/* Card 2: Premium Tier — Lobster Laksa Background */}
           <div className="rounded-[30px] p-2.5 bg-white/80 backdrop-blur-md shadow-xl border border-[#EC6426]/45 flex flex-col">
-            {/* Background Food Canvas: Lobster Laksa (No price text over image) */}
+            {/* Background Food Canvas: Lobster Laksa (No price on image) */}
             <div className="relative rounded-[22px] overflow-hidden min-h-[280px] flex flex-col justify-start p-6 sm:p-7 text-white">
               <img
                 src="/src/assets/images/dish_lobster_laksa_1795159608695.jpg"
@@ -205,7 +238,7 @@ export const PlansPage: React.FC<PlansPageProps> = ({
               </div>
             </div>
 
-            {/* Lower Checklist & 14-Day / 30-Day Price Buttons */}
+            {/* Lower Checklist & Single Package Price CTA Button */}
             <div className="flex-1 flex flex-col justify-between p-5 sm:p-6 bg-white/95 rounded-[22px] mt-2.5">
               <ul className="space-y-2.5 text-sm text-[#632713] mb-6">
                 {PREMIUM_PERKS.map((perk) => (
@@ -216,22 +249,13 @@ export const PlansPage: React.FC<PlansPageProps> = ({
                 ))}
               </ul>
 
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleChoosePackage('premium', 14)}
-                  className="py-3.5 px-3 rounded-xl text-sm font-bold text-[#632713] bg-[#FDE3CF] hover:bg-[#F8A91F]/60 transition-colors font-mono tabular-nums whitespace-nowrap cursor-pointer"
-                >
-                  14 Days · $278.60
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleChoosePackage('premium', 30)}
-                  className="py-3.5 px-3 rounded-xl text-sm font-bold text-white bg-[#EC6426] hover:bg-[#d5531a] transition-colors font-mono tabular-nums whitespace-nowrap cursor-pointer"
-                >
-                  30 Days · $597.00
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => handleChoosePackage('premium')}
+                className="w-full py-3.5 px-5 rounded-xl text-sm font-bold text-white bg-[#EC6426] hover:bg-[#d5531a] transition-colors font-mono tabular-nums cursor-pointer"
+              >
+                Subscribe ({plan.packageDays} Days) · ${premiumPrice.toFixed(2)}
+              </button>
             </div>
           </div>
         </div>
