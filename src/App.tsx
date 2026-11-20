@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, SlidersHorizontal } from 'lucide-react';
 import { Footer } from './components/Footer';
 import { HeroSection } from './components/HeroSection';
@@ -14,6 +14,14 @@ import { PlansPage } from './components/PlansPage';
 import { ProfileQuestionnairePage } from './components/ProfileQuestionnairePage';
 import { UglyFoodSection } from './components/UglyFoodSection';
 import { DIETARY_LABELS, LIFESTYLE_OPTIONS, RECIPES } from './data/recipes';
+import {
+  consent,
+  loadClarity,
+  setConsent,
+  track,
+  variant,
+  type Variant,
+} from './pt';
 import {
   ConfirmedOrder,
   CustomizedDish,
@@ -47,6 +55,12 @@ const DEFAULT_PLAN: SubscriptionPlanState = {
 };
 
 export default function App() {
+  const [abVariant] = useState<Variant>(() => variant());
+  const [consentChoice, setConsentChoice] = useState<'granted' | 'denied' | null>(() =>
+    consent()
+  );
+  const screenTrackedRef = useRef(false);
+
   const [currentView, setCurrentView] = useState<'home' | 'profile' | 'plans'>(() => {
     if (window.location.hash === '#/profile') return 'profile';
     if (window.location.hash === '#/plans') return 'plans';
@@ -91,6 +105,16 @@ export default function App() {
   const [customizingRecipe, setCustomizingRecipe] = useState<Recipe | null>(null);
 
   useEffect(() => {
+    if (consent() === 'granted') {
+      loadClarity();
+    }
+    if (!screenTrackedRef.current) {
+      screenTrackedRef.current = true;
+      track('screen_view');
+    }
+  }, []);
+
+  useEffect(() => {
     const onHashChange = () => {
       if (window.location.hash === '#/profile') setCurrentView('profile');
       else if (window.location.hash === '#/plans') setCurrentView('plans');
@@ -127,6 +151,11 @@ export default function App() {
       // ignore storage quota issues
     }
   }, [confirmedOrder]);
+
+  const handleConsent = (choice: 'granted' | 'denied') => {
+    setConsent(choice);
+    setConsentChoice(choice);
+  };
 
   const openProfilePage = () => {
     setCurrentView('profile');
@@ -260,6 +289,7 @@ export default function App() {
         <>
           <main className="flex-1">
             <PlansPage
+              abVariant={abVariant}
               plan={plan}
               profile={profile}
               confirmedOrder={confirmedOrder}
@@ -380,6 +410,35 @@ export default function App() {
         onClose={() => setCustomizingRecipe(null)}
         onSave={handleSaveCustomization}
       />
+
+      {consentChoice === null && (
+        <aside
+          aria-label="Experiment consent notice"
+          className="fixed bottom-0 inset-x-0 z-50 bg-[#FFFDFB]/95 backdrop-blur-md border-t border-[#632713]/15 shadow-lg"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <p className="text-xs sm:text-sm text-[#632713] leading-relaxed">
+              This class prototype records which version you saw and what you pressed, to test a design. Nothing about your visit leaves this browser unless you agree.
+            </p>
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => handleConsent('granted')}
+                className="px-5 py-2.5 min-w-[104px] text-sm font-semibold text-white bg-[#632713] hover:bg-[#4c1d0e] rounded-xl transition-colors text-center whitespace-nowrap cursor-pointer"
+              >
+                Accept
+              </button>
+              <button
+                type="button"
+                onClick={() => handleConsent('denied')}
+                className="px-5 py-2.5 min-w-[104px] text-sm font-semibold text-white bg-[#632713] hover:bg-[#4c1d0e] rounded-xl transition-colors text-center whitespace-nowrap cursor-pointer"
+              >
+                Decline
+              </button>
+            </div>
+          </div>
+        </aside>
+      )}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   X,
 } from 'lucide-react';
 import { TIER_PRICING } from '../data/recipes';
+import { track } from '../pt';
 import {
   ConfirmedOrder,
   PaymentMethod,
@@ -133,6 +134,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         totalPaid,
         rescuedKgTotal,
       };
+      if (order.plan.tier === 'premium') {
+        track('goal_complete', {
+          tier: order.plan.tier,
+          packageDays: order.plan.packageDays,
+          totalPaid: order.totalPaid,
+        });
+      }
       setIsSubmitting(false);
       onSubmitOrder(order);
     }, 300);

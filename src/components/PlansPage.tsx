@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, Flame } from 'lucide-react';
 import { TIER_PRICING } from '../data/recipes';
+import { track, type Variant } from '../pt';
 import {
   ConfirmedOrder,
   SubscriptionPlanState,
@@ -10,6 +11,7 @@ import {
 import { CheckoutModal } from './CheckoutModal';
 
 interface PlansPageProps {
+  abVariant: Variant;
   plan: SubscriptionPlanState;
   profile: UserProfile;
   confirmedOrder: ConfirmedOrder | null;
@@ -36,6 +38,7 @@ const PREMIUM_PERKS = [
 ];
 
 export const PlansPage: React.FC<PlansPageProps> = ({
+  abVariant,
   plan,
   profile,
   confirmedOrder,
@@ -47,6 +50,9 @@ export const PlansPage: React.FC<PlansPageProps> = ({
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const handleChoosePackage = (tier: SubscriptionTier) => {
+    if (tier === 'premium') {
+      track('cta_click', { tier, packageDays: plan.packageDays });
+    }
     onUpdatePlan({
       ...plan,
       tier,
@@ -209,7 +215,17 @@ export const PlansPage: React.FC<PlansPageProps> = ({
           </div>
 
           {/* Card 2: Premium Tier — Lobster Laksa Background */}
-          <div className="rounded-[30px] p-2.5 bg-white/80 backdrop-blur-md shadow-xl border border-[#EC6426]/45 flex flex-col">
+          <div className="relative rounded-[30px] p-2.5 bg-white/80 backdrop-blur-md shadow-xl border border-[#EC6426]/45 flex flex-col">
+            {abVariant === 'B' && (
+              <div className="animate-red-bubble-pulse absolute -top-5 right-3 sm:right-4 z-20 inline-flex items-center gap-2 rounded-full bg-red-600 text-white text-[15px] sm:text-[18px] leading-tight font-bold px-5 py-2.5 ring-2 ring-white whitespace-nowrap pointer-events-none">
+                <Flame
+                  aria-hidden="true"
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-white fill-white/30 animate-flame-flicker shrink-0"
+                />
+                <span>75% of our users are subscribed</span>
+              </div>
+            )}
+
             {/* Background Food Canvas: Lobster Laksa (No price on image) */}
             <div className="relative rounded-[22px] overflow-hidden min-h-[280px] flex flex-col justify-start p-6 sm:p-7 text-white">
               <img
